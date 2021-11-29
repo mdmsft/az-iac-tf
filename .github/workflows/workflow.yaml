@@ -1,0 +1,59 @@
+on:
+  push:
+    branches:
+      - main
+    
+name: Workflow
+
+env:
+  RESOURCE_GROUP_NAME: rg-contoso-dev-westeurope
+  STORAGE_ACCOUNT_NAME: stf9688171
+  CONTAINER_NAME: tfstate
+  TF_IN_AUTOMATION: true
+  TF_INPUT: false
+  ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+  ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+
+jobs:
+  plan:
+    runs-on: [self-hosted, linux]
+    environment: Plan
+    name: Plan
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+      - name: Terraform init
+        run: terraform init -backend-config="resource_group_name=${RESOURCE_GROUP_NAME}" -backend-config="storage_account_name=${STORAGE_ACCOUNT_NAME}" -backend-config="container_name=${CONTAINER_NAME}"
+      - name: Terraform validate
+        run: terraform validate -no-color
+      - name: Terraform plan
+        run: terraform plan -no-color -out=${{ github.workspace }}/main.tfplan -var=jumpbox_admin_password=${{ secrets.JUMPBOX_ADMIN_PASSWORD }}
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: plan
+          path: ${{ github.workspace }}/main.tfplan
+          if-no-files-found: error
+  apply:
+    runs-on: [self-hosted, linux]
+    environment: Apply
+    name: Apply
+    needs: [plan]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+      - name: Download artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: plan
+          path: ${{ github.workspace }}
+      - name: Terraform init
+        run: terraform init
+      - name: Terraform apply
+        run: terraform apply ${{ github.workspace }}/main.tfplan

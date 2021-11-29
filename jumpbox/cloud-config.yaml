@@ -1,0 +1,33 @@
+#cloud-config
+
+apt:
+  sources:
+    docker.list:
+      source: deb [arch=amd64] https://download.docker.com/linux/ubuntu $RELEASE stable
+      keyid: 9DC858229FC7DD38854AE2D88D81803C0EBFCD88
+    azurecli.list:
+      source: deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $RELEASE main
+      keyid: BC528686B50D79E339D3721CEB3E94ADBE1229CF
+
+packages:
+  - apt-transport-https
+  - ca-certificates
+  - curl
+  - gnupg-agent
+  - software-properties-common
+  - docker-ce
+  - docker-ce-cli
+  - containerd.io
+  - azure-cli
+
+write_files:
+  - path: /etc/sysctl.d/enabled_ipv4_forwarding.conf
+    content: |
+      net.ipv4.conf.all.forwarding=1
+
+groups:
+  - docker
+
+system_info:
+  default_user:
+    groups: [docker]
