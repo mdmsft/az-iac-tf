@@ -31,12 +31,12 @@ jobs:
       - name: Terraform validate
         run: terraform validate -no-color
       - name: Terraform plan
-        run: terraform plan -no-color -out=${{ github.workspace }}/main.tfplan -var=jumpbox_admin_password=${{ secrets.JUMPBOX_ADMIN_PASSWORD }}
+        run: terraform plan -no-color -out=main.tfplan -var=jumpbox_admin_password=${{ secrets.JUMPBOX_ADMIN_PASSWORD }}
       - name: Upload artifact
         uses: actions/upload-artifact@v2
         with:
           name: plan
-          path: ${{ github.workspace }}/main.tfplan
+          path: main.tfplan
           if-no-files-found: error
   apply:
     runs-on: ubuntu-latest
@@ -56,4 +56,4 @@ jobs:
       - name: Terraform init
         run: terraform init -backend-config="resource_group_name=${RESOURCE_GROUP_NAME}" -backend-config="storage_account_name=${STORAGE_ACCOUNT_NAME}" -backend-config="container_name=${CONTAINER_NAME}"
       - name: Terraform apply
-        run: terraform apply ${{ github.workspace }}/main.tfplan
+        run: terraform apply main.tfplan
