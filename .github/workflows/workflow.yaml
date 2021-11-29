@@ -18,7 +18,7 @@ env:
 
 jobs:
   plan:
-    runs-on: [self-hosted, linux]
+    runs-on: ubuntu-latest
     environment: Plan
     name: Plan
     steps:
@@ -39,7 +39,7 @@ jobs:
           path: ${{ github.workspace }}/main.tfplan
           if-no-files-found: error
   apply:
-    runs-on: [self-hosted, linux]
+    runs-on: ubuntu-latest
     environment: Apply
     name: Apply
     needs: [plan]
